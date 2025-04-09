@@ -88,7 +88,7 @@ fun MainScreen() {
                 CocktailList { cocktail ->
                     selectedCocktailList = selectedCocktailList + cocktail }
             }
-            Box(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier.weight(2f)) {
                 selectedCocktailList.lastOrNull()?.let { CocktailDetails(it.name) }
             }
         }
