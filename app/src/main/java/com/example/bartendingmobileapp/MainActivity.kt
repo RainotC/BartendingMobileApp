@@ -55,7 +55,9 @@ val cocktails = listOf(
     Cocktail("Example10", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe10"),
     Cocktail("Example11", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe11"),
     Cocktail("Example12", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe12"),
-    Cocktail("Example13", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe13")
+    Cocktail("Example13", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe13"),
+    Cocktail("Example14", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe14"),
+    Cocktail("Example15", listOf("ingredient1", "ingredient2", "ingredient3"), "recipe15")
 )
 
 
