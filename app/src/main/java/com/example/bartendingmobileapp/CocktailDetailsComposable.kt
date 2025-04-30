@@ -1,5 +1,6 @@
 package com.example.bartendingmobileapp
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,12 +42,30 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun CocktailDetails(cocktail: Cocktail) {
-    Box(modifier = Modifier.padding(20.dp)) {
+    val context = LocalContext.current
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                Toast.makeText(
+                    context,
+                    "Ingredients: ${cocktail.ingredients.joinToString(", ")}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }){
+                Icon(Icons.Default.Send, contentDescription = "Send SMS")
+            }
+        }
+    ) { innerPadding ->
+    Box(modifier = Modifier
+            .fillMaxSize()
+        .padding(innerPadding)
+        .padding(5.dp)
+        ) {
         val configuration = LocalConfiguration.current
         if (configuration.screenWidthDp > configuration.screenHeightDp) {
             // Horizontal view
             Row(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(modifier = Modifier.weight(1f).padding(20.dp)) {
+                LazyColumn(modifier = Modifier.weight(1f).padding(5.dp)) {
                     item {
                         Text(text = cocktail.name, style = MaterialTheme.typography.headlineMedium)
                         Spacer(modifier = Modifier.height(10.dp))
@@ -64,7 +90,7 @@ fun CocktailDetails(cocktail: Cocktail) {
                 }
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.5f)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -129,7 +155,7 @@ fun CocktailDetails(cocktail: Cocktail) {
             }
         }
     }
-}
+}}
 
 
 

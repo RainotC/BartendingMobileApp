@@ -165,7 +165,7 @@ fun MainScreen() {
                                     }
                                 )
                             }
-                            Box(modifier = Modifier.weight(2f)) {
+                            Box(modifier = Modifier.weight(1.5f)) {
                                 selectedCocktailList.lastOrNull()?.let {
                                     CocktailDetails(it)
                                 }
@@ -195,7 +195,7 @@ fun MainScreen() {
                                     }
                                 )
                             }
-                            Box(modifier = Modifier.weight(2f)) {
+                            Box(modifier = Modifier.weight(1.5f)) {
                                 selectedCocktailList.lastOrNull()?.let {
                                     CocktailDetails(it)
                                 }
@@ -233,7 +233,7 @@ fun CocktailList(    cocktails: List<Cocktail>,
                      onCocktailSelected: (Cocktail) -> Unit,
                      modifier: Modifier = Modifier
 ) {
-    LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize()) {
+    LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 150.dp), modifier = Modifier.fillMaxSize()) {
         items(cocktails) { cocktail ->
             Card(
                 modifier = Modifier
