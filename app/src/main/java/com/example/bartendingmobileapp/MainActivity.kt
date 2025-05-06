@@ -43,7 +43,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.runtime.rememberCoroutineScope
 import com.example.bartendingmobileapp.ui.theme.BartendingMobileAppTheme
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
+
+import kotlinx.coroutines.launch
 import kotlin.collections.plus
 
 
@@ -127,15 +132,20 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    var selectedTab by remember { mutableStateOf(AppTab.Info) }
+    val pagerState = rememberPagerState(initialPage = 0)
+    val tabs = AppTab.entries
+    val coroutineScope = rememberCoroutineScope()
+    //var selectedTab by remember { mutableStateOf(AppTab.Info) }
     Scaffold(
         topBar = {
-            TabRow(selectedTabIndex = selectedTab.ordinal) {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
                 AppTab.entries.forEachIndexed { index, tab ->
                     Tab(
-                        selected = selectedTab.ordinal == index,
+                        selected = pagerState.currentPage == index,
                         onClick = {
-                            selectedTab = tab
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
                         },
                         text = { Text(tab.title) }
                     )
@@ -146,8 +156,12 @@ fun MainScreen() {
             .fillMaxSize()
             .padding(WindowInsets.systemBars.asPaddingValues())
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (selectedTab) {
+        HorizontalPager(
+            count = tabs.size,
+            state = pagerState,
+            modifier = Modifier.padding(innerPadding)
+        ) { page ->
+            when (tabs[page]) {
                 AppTab.Info -> InfoScreen()
                 AppTab.Alcoholic -> CocktailView(alcoholicCocktails)
                 AppTab.NonAlcoholic -> CocktailView(nonAlcoholicCocktails)
