@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.example.bartendingmobileapp.ui.theme.BartendingMobileAppTheme
 
 
 class CocktailDetailsActivity : ComponentActivity() {
@@ -24,7 +25,7 @@ class CocktailDetailsActivity : ComponentActivity() {
 
         Log.d("CocktailDetails", "Cocktail Name Passed: $cocktailName")
         setContent {
-            MaterialTheme {
+            BartendingMobileAppTheme {
                 if (cocktail != null) {
                     CocktailDetails(cocktail)
                 } else {

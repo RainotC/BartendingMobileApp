@@ -2,6 +2,7 @@ package com.example.bartendingmobileapp
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,7 +58,8 @@ fun CocktailDetails(cocktail: Cocktail) {
         }
     ) { innerPadding ->
     Box(modifier = Modifier
-            .fillMaxSize()
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.tertiary)
         .padding(innerPadding)
         .padding(5.dp)
         ) {
@@ -170,6 +172,8 @@ fun Timer(minutes: Int, seconds: Int) {
 
     Column(modifier = Modifier
         .fillMaxWidth()
+        .clip(MaterialTheme.shapes.medium)
+        .background(MaterialTheme.colorScheme.background)
         .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally)
     {

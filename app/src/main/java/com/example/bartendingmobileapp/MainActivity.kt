@@ -40,8 +40,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import com.example.bartendingmobileapp.ui.theme.BartendingMobileAppTheme
+import kotlin.collections.plus
+
 
 data class Cocktail(val name: String, @DrawableRes val imageResId: Int, val ingredients: List<String>, val recipe: String)
 
@@ -108,8 +112,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                MainScreen()
+            BartendingMobileAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    MainScreen()
+                }
             }
         }
     }
@@ -118,19 +127,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val configuration = LocalConfiguration.current
-    val context = LocalContext.current
-    val isTablet = configuration.screenWidthDp > 600
-
     var selectedTab by remember { mutableStateOf(AppTab.Info) }
-
-    var selectedCocktailList by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
-
-    BackHandler(enabled = selectedCocktailList.isNotEmpty()) {
-        selectedCocktailList= selectedCocktailList.dropLast(1)
-    }
-
-
     Scaffold(
         topBar = {
             TabRow(selectedTabIndex = selectedTab.ordinal) {
@@ -139,7 +136,6 @@ fun MainScreen() {
                         selected = selectedTab.ordinal == index,
                         onClick = {
                             selectedTab = tab
-                            selectedCocktailList = emptyList()
                         },
                         text = { Text(tab.title) }
                     )
@@ -153,85 +149,68 @@ fun MainScreen() {
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
                 AppTab.Info -> InfoScreen()
+                AppTab.Alcoholic -> CocktailView(alcoholicCocktails)
+                AppTab.NonAlcoholic -> CocktailView(nonAlcoholicCocktails)
 
-                AppTab.Alcoholic -> {
-                    if (isTablet) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                CocktailList(
-                                    cocktails = alcoholicCocktails,
-                                    onCocktailSelected = { cocktail ->
-                                        selectedCocktailList = selectedCocktailList + cocktail
-                                    }
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1.5f)) {
-                                selectedCocktailList.lastOrNull()?.let {
-                                    CocktailDetails(it)
-                                }
-                            }
-                        }
-                    } else {
-                        CocktailList(
-                            cocktails = alcoholicCocktails,
-                            onCocktailSelected = { cocktail ->
-                                context.startActivity(Intent(context, CocktailDetailsActivity::class.java).apply {
-                                    putExtra("cocktail_name", cocktail.name)
-                                    putExtra("cocktail_type", "alcoholic")
-                                })
-                            }
-                        )
-                    }
-                }
-
-                AppTab.NonAlcoholic -> {
-                    if (isTablet) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                CocktailList(
-                                    cocktails = nonAlcoholicCocktails,
-                                    onCocktailSelected = { cocktail ->
-                                        selectedCocktailList = selectedCocktailList + cocktail
-                                    }
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1.5f)) {
-                                selectedCocktailList.lastOrNull()?.let {
-                                    CocktailDetails(it)
-                                }
-                            }
-                        }
-                    } else {
-                        CocktailList(
-                            cocktails = nonAlcoholicCocktails,
-                            onCocktailSelected = { cocktail ->
-                                context.startActivity(Intent(context, CocktailDetailsActivity::class.java).apply {
-                                    putExtra("cocktail_name", cocktail.name)
-                                    putExtra("cocktail_type", "alcoholic")
-                                })
-                            }
-                        )
-                    }
-                }
-
+            }
         }
     }
-}}
+}
 
 @Composable
 fun InfoScreen() {
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
         Text("Bartending App", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Text("App made by student with index 155992")
     }
 }
 
+@Composable
+fun CocktailView(cocktailList: List<Cocktail>){
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isTablet = configuration.screenWidthDp > 600
+    var selectedCocktailList by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
+
+
+    BackHandler(enabled = selectedCocktailList.isNotEmpty()) {
+        selectedCocktailList= selectedCocktailList.dropLast(1)
+    }
+    if (isTablet) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                CocktailGrid(
+                    cocktails = cocktailList,
+                    onCocktailSelected = { cocktail ->
+                        selectedCocktailList = selectedCocktailList + cocktail
+                    }
+                )
+            }
+            Box(modifier = Modifier.weight(1.5f)) {
+                selectedCocktailList.lastOrNull()?.let {
+                    CocktailDetails(it)
+                }
+            }
+        }
+    } else {
+        CocktailGrid(
+            cocktails = cocktailList,
+            onCocktailSelected = { cocktail ->
+                context.startActivity(Intent(context, CocktailDetailsActivity::class.java).apply {
+                    putExtra("cocktail_name", cocktail.name)
+                    putExtra("cocktail_type", "alcoholic")
+                })
+            }
+        )
+    }
+}
+
 
 @Composable
-fun CocktailList(    cocktails: List<Cocktail>,
-                     onCocktailSelected: (Cocktail) -> Unit,
-                     modifier: Modifier = Modifier
+fun CocktailGrid(cocktails: List<Cocktail>,
+                 onCocktailSelected: (Cocktail) -> Unit,
+                 modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 150.dp), modifier = Modifier.fillMaxSize()) {
         items(cocktails) { cocktail ->
