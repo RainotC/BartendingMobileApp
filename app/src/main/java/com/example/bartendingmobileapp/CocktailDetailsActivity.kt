@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.example.bartendingmobileapp.ui.theme.BartendingMobileAppTheme
+import com.google.accompanist.pager.rememberPagerState
 
 
 class CocktailDetailsActivity : ComponentActivity() {
@@ -14,6 +15,8 @@ class CocktailDetailsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val cocktailName = intent.getStringExtra("cocktail_name")
         val cocktailType = intent.getStringExtra("cocktail_type")
+        val currentPage = intent.getIntExtra("current_page", 0)
+
 
         val sourceList = when (cocktailType) {
             "alcoholic" -> alcoholicCocktails
@@ -26,8 +29,9 @@ class CocktailDetailsActivity : ComponentActivity() {
         Log.d("CocktailDetails", "Cocktail Name Passed: $cocktailName")
         setContent {
             BartendingMobileAppTheme {
+                val pagerState = rememberPagerState(initialPage = 0)
                 if (cocktail != null) {
-                    CocktailDetails(cocktail)
+                    CocktailDetails(cocktail, pagerState)
                 } else {
                     Text("Cocktail not found")
                 }

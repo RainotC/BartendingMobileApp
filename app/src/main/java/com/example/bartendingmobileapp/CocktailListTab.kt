@@ -35,28 +35,26 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.collections.plus
 
 
 @Composable
-fun CocktailView(cocktailList: List<Cocktail>, drawerState : DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)) {
+fun CocktailView(cocktailList: List<Cocktail>, drawerState : DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed), pagerState: com.google.accompanist.pager.PagerState = rememberPagerState()) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val isTablet = configuration.screenWidthDp > 600 && configuration.screenHeightDp > 480
     var selectedCocktailList by remember { mutableStateOf<List<Cocktail>>(emptyList()) }
-    val scope = rememberCoroutineScope()
+
+
 
     BackHandler(enabled = drawerState.isOpen || selectedCocktailList.isNotEmpty()) {
-        when {
-            drawerState.isOpen -> {
-                scope.launch {
-                    drawerState.close()
-                }
-            }
-            selectedCocktailList.isNotEmpty() -> {
+        if(
+            selectedCocktailList.isNotEmpty() ){
                 selectedCocktailList = selectedCocktailList.dropLast(1)
-            }
+
         }
     }
     if (isTablet) {
@@ -71,17 +69,19 @@ fun CocktailView(cocktailList: List<Cocktail>, drawerState : DrawerState = remem
             }
             Box(modifier = Modifier.weight(1.5f)) {
                 selectedCocktailList.lastOrNull()?.let {
-                    CocktailDetails(it)
+                    CocktailDetails(it, pagerState)
                 }
             }
         }
     } else {
+
         CocktailGrid(
             cocktails = cocktailList,
             onCocktailSelected = { cocktail ->
                 context.startActivity(Intent(context, CocktailDetailsActivity::class.java).apply {
                     putExtra("cocktail_name", cocktail.name)
                     putExtra("cocktail_type", if (cocktailList == alcoholicCocktails) "alcoholic" else "non_alcoholic")
+                    putExtra("current_page", pagerState.currentPage)
                 })
             }
         )

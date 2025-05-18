@@ -1,18 +1,18 @@
 package com.example.bartendingmobileapp
 
-import android.R.attr.content
-import android.R.id.content
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
@@ -30,8 +29,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -61,85 +60,92 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CocktailDetails(cocktail: Cocktail) {
+fun CocktailDetails(cocktail: Cocktail, pagerState: com.google.accompanist.pager.PagerState) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val expandedImageHeight = (screenHeight / 2) - 88.dp
-    val isTablet = LocalConfiguration.current.screenWidthDp > 600
+    val configuration = LocalConfiguration.current
+    val isTablet = configuration.screenWidthDp > 600 && configuration.screenHeightDp > 480
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    val mainContent = @Composable {
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                Box {
-                    val height by animateDpAsState(
-                        targetValue = 88.dp + (expandedImageHeight * (1f - scrollBehavior.state.collapsedFraction)),
-                        animationSpec = tween(300)
-                    )
 
-                    Image(
-                        painter = painterResource(cocktail.imageResId),
-                        contentDescription = cocktail.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(height)
-                    )
-                    TopAppBar(
-                        title = { Text(cocktail.name) },
-                        navigationIcon = {
-                            if (isTablet) {null}
-                            else{
-                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
-                                }
+    if(!isTablet){
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                NavigationDrawer(
+                    pagerState = pagerState,
+                    scope = scope,
+                    onBackClick = {
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    onNavigationItemSelected = { page ->
+                        scope.launch {
+                            pagerState.animateScrollToPage(page)
+                            pagerState.currentPage == page
+                            drawerState.close()
+
+                        }
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                    }
+                )
+            },
+            gesturesEnabled = true
+        ) {
+            Scaffold(
+
+                topBar = {
+                    NavigationBar(
+                        onListClick = {
+                            scope.launch {
+                                drawerState.open()
                             }
                         },
                         scrollBehavior = scrollBehavior,
-                        modifier = Modifier.fillMaxWidth()
+                        exampleText = cocktail.name
                     )
-
-                }
-            },
-
-            floatingActionButton = {
-                FloatingActionButton(onClick = {
-                    Toast.makeText(
-                        context,
-                        "Ingredients: ${cocktail.ingredients.joinToString(", ")}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }) {
-                    Icon(Icons.Default.Send, contentDescription = "Send SMS")
-                }
-            }
-        ) { innerPadding ->
-            DetailsDisplay(innerPadding, cocktail)
-        }
-    }
-    if (isTablet) {
-        mainContent()
-    } else {
-        NavigationDrawer(
-            drawerState = drawerState,
-            onItemSelected = { item ->
-                when (item) {
-                    "Main menu" -> {
-                        scope.launch {
-                            drawerState.close()
-                            context.startActivity(Intent(context, MainActivity::class.java))
-                        }
+                },
+                floatingActionButton = {
+                    FloatingActionButton(onClick = {
+                        Toast.makeText(
+                            context,
+                            "Ingredients: ${cocktail.ingredients.joinToString(", ")}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }) {
+                        Icon(Icons.Default.Send, contentDescription = "Send SMS")
                     }
                 }
-            },
-            content = mainContent
-        )
+            ) { innerPadding ->
+                DetailsDisplay(innerPadding, cocktail)
+            }
+
+        }
     }
+    else{
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                Toast.makeText(
+                    context,
+                    "Ingredients: ${cocktail.ingredients.joinToString(", ")}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }) {
+                Icon(Icons.Default.Send, contentDescription = "Send SMS")
+            }
+        }
+    ) { innerPadding ->
+        DetailsDisplay(innerPadding, cocktail)
+    }
+
 }
+    }
+
+
 
 
 @Composable
@@ -150,6 +156,14 @@ fun DetailsDisplay(innerPadding: PaddingValues, cocktail: Cocktail){
             // Horizontal view
             Row(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiary)) {
                 LazyColumn(modifier = Modifier.weight(1f).padding(5.dp)) {
+                    item{
+                        Image(
+                            painter = painterResource(cocktail.imageResId),
+                            contentDescription = cocktail.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )}
                     item {
                         Spacer(modifier = Modifier.height(100.dp))
                         Text(
@@ -179,22 +193,32 @@ fun DetailsDisplay(innerPadding: PaddingValues, cocktail: Cocktail){
                 Column(
                     modifier = Modifier
                         .weight(0.5f)
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Timer:",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Timer(minutes = 0, seconds = 30)
                 }
             }
         } else {
             // Vertical view
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.tertiary)) {
                 LazyColumn(modifier = Modifier.weight(1f).padding(20.dp)) {
+                    item{
+                        Image(
+                        painter = painterResource(cocktail.imageResId),
+                        contentDescription = cocktail.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )}
                     item {
                         Text(
                             text = cocktail.name,
