@@ -1,5 +1,9 @@
 package com.example.bartendingmobileapp
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,14 +25,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.bartendingmobileapp.ui.theme.BartendingMobileAppTheme
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
-
+import androidx.compose.runtime.remember
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 enum class AppTab(val title: String) {
     Info("Info"),
@@ -36,26 +45,74 @@ enum class AppTab(val title: String) {
     NonAlcoholic("Non-Alcoholic")
 }
 
+class MainActivity : ComponentActivity(), SensorEventListener {
+    private lateinit var sensorManager: SensorManager
+    private var accelCurrent = 0f
+    private var accelLast = 0f
 
-class MainActivity : ComponentActivity() {
+    private val _shakeState = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            BartendingMobileAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
 
-                        MainScreen()
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        val accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI)
+
+        setContent {
+            var showMainScreen by remember { mutableStateOf(false) }
+
+            if (_shakeState.value) {
+                showMainScreen = true
+            }
+
+            if (showMainScreen) {
+                BartendingMobileAppTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            MainScreen()
+                        }
                     }
+                }
+            } else {
+                SplashScreen(
+                    onShakeDetected = {
+                        showMainScreen = true
+                    }
+                )
+            }
+        }
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+            val x = event.values[0]
+            val y = event.values[1]
+            val z = event.values[2]
+
+            accelLast = accelCurrent
+            accelCurrent = sqrt((x * x + y * y + z * z).toDouble()).toFloat()
+            val delta = abs(accelCurrent - accelLast)
+
+            val shakeThreshold = 12f
+            if (delta > shakeThreshold) {
+                runOnUiThread {
+                    _shakeState.value = true
                 }
             }
         }
     }
-}
 
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    override fun onPause() {
+        super.onPause()
+
+    }
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
