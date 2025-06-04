@@ -36,6 +36,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -45,74 +46,28 @@ enum class AppTab(val title: String) {
     NonAlcoholic("Non-Alcoholic")
 }
 
-class MainActivity : ComponentActivity(), SensorEventListener {
-    private lateinit var sensorManager: SensorManager
-    private var accelCurrent = 0f
-    private var accelLast = 0f
+class MainActivity : ComponentActivity(){
 
-    private val _shakeState = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        val accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        sensorManager.registerListener(this, accelSensor, SensorManager.SENSOR_DELAY_UI)
-
         setContent {
-            var showMainScreen by remember { mutableStateOf(false) }
-
-            if (_shakeState.value) {
-                showMainScreen = true
-            }
-
-            if (showMainScreen) {
-                BartendingMobileAppTheme {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.primary
+            BartendingMobileAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.primary
                     ) {
                         Column(modifier = Modifier.fillMaxSize()) {
                             MainScreen()
                         }
                     }
                 }
-            } else {
-                SplashScreen(
-                    onShakeDetected = {
-                        showMainScreen = true
-                    }
-                )
             }
         }
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
-            val x = event.values[0]
-            val y = event.values[1]
-            val z = event.values[2]
-
-            accelLast = accelCurrent
-            accelCurrent = sqrt((x * x + y * y + z * z).toDouble()).toFloat()
-            val delta = abs(accelCurrent - accelLast)
-
-            val shakeThreshold = 12f
-            if (delta > shakeThreshold) {
-                runOnUiThread {
-                    _shakeState.value = true
-                }
-            }
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-
-    override fun onPause() {
-        super.onPause()
 
     }
-}
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
